@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Assessment Platform</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-screen, .assessment-screen, .results-screen, .leaderboard-screen {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2c5364;
+            box-shadow: 0 0 0 3px rgba(44, 83, 100, 0.1);
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(44, 83, 100, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-left: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c5364;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2c5364 0%, #4ca1af 100%);
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .question-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #2c5364;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: #1a1a2e;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre;
+        }
+
+        .options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option:hover {
+            border-color: #2c5364;
+            background: #f8f9fa;
+        }
+
+        .option.selected {
+            border-color: #2c5364;
+            background: linear-gradient(135deg, rgba(44, 83, 100, 0.1) 0%, rgba(76, 161, 175, 0.1) 100%);
+        }
+
+        .option-label {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-label {
+            background: #2c5364;
+            color: white;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .results-summary {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(44, 83, 100, 0.1) 0%, rgba(76, 161, 175, 0.1) 100%);
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .score {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #2c5364;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .score-label {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .answer-review {
+            margin-top: 2rem;
+        }
+
+        .answer-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #e0e0e0;
+        }
+
+        .answer-item.correct {
+            border-left-color: #51cf66;
+            background: rgba(81, 207, 102, 0.05);
+        }
+
+        .answer-item.incorrect {
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.05);
+        }
+
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .answer-status {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .answer-status.correct {
+            background: #51cf66;
+            color: white;
+        }
+
+        .answer-status.incorrect {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .explanation {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        .leaderboard-table th {
+            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .leaderboard-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .leaderboard-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .rank {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #2c5364;
+        }
+
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c5364;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.5rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .question-dot {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 5px;
+            background: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .question-dot:hover {
+            transform: scale(1.1);
+        }
+
+        .question-dot.answered {
+            background: #2c5364;
+            color: white;
+        }
+
+        .question-dot.current {
+            background: #4ca1af;
+            color: white;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const questions = [
+            {
+                id: 1,
+                question: "What will be the output of this code?",
+                code: `x = [1, 2, 3]
+y = x
+y.append(4)
+print(x)`,
+                options: ["[1, 2, 3]", "[1, 2, 3, 4]", "[4]", "Error"],
+                correct: 1,
+                explanation: "Lists are mutable and assigned by reference. When y = x, both variables point to the same list object. Modifying y also modifies x."
+            },
+            {
+                id: 2,
+                question: "Identify the error in this code:",
+                code: `def calculate(a, b=5, c):
+    return a + b + c`,
+                options: ["No error", "Non-default argument follows default argument", "Invalid function name", "Missing return statement"],
+                correct: 1,
+                explanation: "In Python, non-default arguments cannot follow default arguments in function definitions. Parameter 'c' should come before 'b=5'."
+            },
+            {
+                id: 3,
+                question: "What does this code print?",
+                code: `d = {'a': 1, 'b': 2}
+print(d.get('c', 0))`,
+                options: ["KeyError", "None", "0", "''"],
+                correct: 2,
+                explanation: "The get() method returns the default value (second argument) if the key doesn't exist. Since 'c' is not in the dictionary, it returns 0."
+            },
+            {
+                id: 4,
+                question: "What will be the output?",
+                code: `x = "hello"
+x[0] = 'H'
+print(x)`,
+                options: ["Hello", "hello", "TypeError", "IndexError"],
+                correct: 2,
+                explanation: "Strings are immutable in Python. You cannot modify individual characters using index assignment, which raises a TypeError."
+            },
+            {
+                id: 5,
+                question: "What is the result?",
+                code: `result = 10 / 3
+print(type(result))`,
+                options: ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'decimal'>"],
+                correct: 1,
+                explanation: "The / operator always returns a float in Python 3, even when dividing integers. Use // for integer division."
+            },
+            {
+                id: 6,
+                question: "What will this print?",
+                code: `nums = [1, 2, 3, 4, 5]
+print(nums[-1:-4:-1])`,
+                options: ["[5, 4, 3, 2]", "[5, 4, 3]", "[2, 3, 4]", "[]"],
+                correct: 1,
+                explanation: "Slice with negative step: starts at index -1 (5), stops before -4 (exclusive), stepping backwards. Returns [5, 4, 3]."
+            },
+            {
+                id: 7,
+                question: "Identify the bug:",
+                code: `def add_item(item, lst=[]):
+    lst.append(item)
+    return lst
+
+print(add_item(1))
+print(add_item(2))`,
+                options: ["No bug", "Mutable default argument", "Syntax error", "Type error"],
+                correct: 1,
+                explanation: "Mutable default arguments (like []) are created once and shared across calls. The second call appends to the same list, printing [1, 2] instead of [2]."
+            },
+            {
+                id: 8,
+                question: "What's the output?",
+                code: `x = [1, 2, 3]
+y = x.copy()
+y[0] = 99
+print(x[0])`,
+                options: ["99", "1", "Error", "None"],
+                correct: 1,
+                explanation: "The copy() method creates a shallow copy. Modifications to y don't affect x, so x[0] remains 1."
+            },
+            {
+                id: 9,
+                question: "What will happen?",
+                code: `try:
+    result = 10 / 0
+except ZeroDivisionError:
+    result = None
+finally:
+    print("Done")`,
+                options: ["Prints 'Done' and crashes", "Only prints 'Done'", "Only sets result to None", "Syntax error"],
+                correct: 1,
+                explanation: "The finally block always executes, regardless of whether an exception occurred. The code prints 'Done' and sets result to None."
+            },
+            {
+                id: 10,
+                question: "What's printed?",
+                code: `x = {1, 2, 3}
+y = {3, 4, 5}
+print(len(x | y))`,
+                options: ["3", "5", "6", "Error"],
+                correct: 1,
+                explanation: "The | operator performs set union. {1, 2, 3} | {3, 4, 5} = {1, 2, 3, 4, 5}, which has 5 elements."
+            },
+            {
+                id: 11,
+                question: "What does this return?",
+                code: `def func(x=[]):
+    x.append(1)
+    return len(x)
+
+print(func())
+print(func())`,
+                options: ["1\\n1", "1\\n2", "2\\n2", "Error"],
+                correct: 1,
+                explanation: "Mutable default argument issue again. The same list is reused across calls, so first call returns 1, second returns 2."
+            },
+            {
+                id: 12,
+                question: "What's the output?",
+                code: `data = [1, 2, 3, 4, 5]
+print(data[::2])`,
+                options: ["[1, 2, 3, 4, 5]", "[1, 3, 5]", "[2, 4]", "[5, 4, 3, 2, 1]"],
+                correct: 1,
+                explanation: "Slice notation [::2] means start to end with step 2. Returns every second element: [1, 3, 5]."
+            },
+            {
+                id: 13,
+                question: "Identify the error:",
+                code: `my_dict = {'key': 'value'}
+print(my_dict['missing_key'])`,
+                options: ["Returns None", "Returns ''", "Raises KeyError", "Returns 0"],
+                correct: 2,
+                explanation: "Accessing a non-existent key with [] raises KeyError. Use .get() method to avoid this."
+            },
+            {
+                id: 14,
+                question: "What will be printed?",
+                code: `x = True
+y = False
+print(x + y)`,
+                options: ["TrueFalse", "1", "0", "Error"],
+                correct: 1,
+                explanation: "In Python, True is 1 and False is 0 when used in arithmetic operations. True + False = 1 + 0 = 1."
+            },
+            {
+                id: 15,
+                question: "What's the result?",
+                code: `lst = [1, 2, 3]
+lst2 = lst * 2
+print(lst2)`,
+                options: ["[1, 2, 3, 1, 2, 3]", "[2, 4, 6]", "[[1, 2, 3], [1, 2, 3]]", "Error"],
+                correct: 0,
+                explanation: "The * operator on lists repeats the list. lst * 2 creates [1, 2, 3, 1, 2, 3]."
+            },
+            {
+                id: 16,
+                question: "What does this code do?",
+                code: `s = "hello"
+print(s[::-1])`,
+                options: ["hello", "olleh", "Error", "h"],
+                correct: 1,
+                explanation: "Slice with step -1 reverses the string. 'hello'[::-1] returns 'olleh'."
+            },
+            {
+                id: 17,
+                question: "What's the output?",
+                code: `x = [1, 2, 3]
+y = [4, 5, 6]
+z = x + y
+print(len(z))`,
+                options: ["3", "6", "9", "Error"],
+                correct: 1,
+                explanation: "The + operator concatenates lists. [1, 2, 3] + [4, 5, 6] = [1, 2, 3, 4, 5, 6], which has 6 elements."
+            },
+            {
+                id: 18,
+                question: "Identify the bug:",
+                code: `def greet(name):
+    message = f"Hello {name}"
+    
+print(message)`,
+                options: ["No bug", "NameError: message not defined", "IndentationError", "SyntaxError"],
+                correct: 1,
+                explanation: "Variable 'message' is defined inside the function scope and doesn't exist outside. This raises NameError."
+            },
+            {
+                id: 19,
+                question: "What will this print?",
+                code: `nums = [1, 2, 3, 4]
+squared = [x**2 for x in nums if x > 2]
+print(squared)`,
+                options: ["[1, 4, 9, 16]", "[9, 16]", "[3, 4]", "[1, 2]"],
+                correct: 1,
+                explanation: "List comprehension with condition: squares only numbers > 2. So 3²=9 and 4²=16, result is [9, 16]."
+            },
+            {
+                id: 20,
+                question: "What's the output?",
+                code: `x = None
+if x:
+    print("True")
+else:
+    print("False")`,
+                options: ["True", "False", "None", "Error"],
+                correct: 1,
+                explanation: "None is falsy in Python. In boolean context, it evaluates to False, so 'False' is printed."
+            },
+            {
+                id: 21,
+                question: "What does this return?",
+                code: `def func(*args):
+    return len(args)
+
+print(func(1, 2, 3, 4, 5))`,
+                options: ["5", "1", "Error", "None"],
+                correct: 0,
+                explanation: "*args collects all positional arguments into a tuple. With 5 arguments passed, len(args) returns 5."
+            },
+            {
+                id: 22,
+                question: "What will be printed?",
+                code: `a = [1, 2]
+b = [1, 2]
+print(a == b)
+print(a is b)`,
+                options: ["True\\nTrue", "True\\nFalse", "False\\nTrue", "False\\nFalse"],
+                correct: 1,
+                explanation: "== compares values (True), 'is' compares identity/memory location (False - they're different objects)."
+            },
+            {
+                id: 23,
+                question: "Identify the error:",
+                code: `for i in range(5)
+    print(i)`,
+                options: ["No error", "Missing colon after range(5)", "Invalid range", "Wrong indentation"],
+                correct: 1,
+                explanation: "Python requires a colon (:) at the end of for loop declarations. Should be 'for i in range(5):'."
+            },
+            {
+                id: 24,
+                question: "What's the result?",
+                code: `x = 5
+y = 2
+print(x // y)`,
+                options: ["2.5", "2", "3", "Error"],
+                correct: 1,
+                explanation: "// is the floor division operator, which returns the quotient without remainder. 5 // 2 = 2."
+            },
+            {
+                id: 25,
+                question: "What will this print?",
+                code: `my_list = [1, 2, 3]
+my_list.extend([4, 5])
+print(my_list)`,
+                options: ["[1, 2, 3, [4, 5]]", "[1, 2, 3, 4, 5]", "[[1, 2, 3], [4, 5]]", "Error"],
+                correct: 1,
+                explanation: "extend() adds each element of the iterable to the list. Unlike append(), it doesn't add the list as a single element."
+            },
+            {
+                id: 26,
+                question: "What's the output?",
+                code: `text = "python"
+print(text.capitalize())`,
+                options: ["python", "Python", "PYTHON", "pYTHON"],
+                correct: 1,
+                explanation: "capitalize() returns a string with first character uppercase and rest lowercase. 'python' becomes 'Python'."
+            },
+            {
+                id: 27,
+                question: "Identify the bug:",
+                code: `numbers = [1, 2, 3, 4, 5]
+for i in numbers:
+    if i == 3:
+        numbers.remove(i)
+print(numbers)`,
+                options: ["No bug", "Modifying list during iteration", "Invalid remove", "Syntax error"],
+                correct: 1,
+                explanation: "Modifying a list while iterating over it can cause unexpected behavior and skipped elements. Use list comprehension or iterate over a copy."
+            },
+            {
+                id: 28,
+                question: "What will be printed?",
+                code: `d = {'a': 1, 'b': 2, 'c': 3}
+print(d.pop('d', 0))`,
+                options: ["KeyError", "0", "None", "'d'"],
+                correct: 1,
+                explanation: "pop() with default value returns the default (0) if key doesn't exist. It doesn't raise KeyError when default is provided."
+            },
+            {
+                id: 29,
+                question: "What's the result?",
+                code: `x = "123"
+y = int(x)
+print(type(y))`,
+                options: ["<class 'str'>", "<class 'int'>", "<class 'float'>", "ValueError"],
+                correct: 1,
+                explanation: "int() converts the string '123' to integer 123. The type is <class 'int'>."
+            },
+            {
+                id: 30,
+                question: "What does this print?",
+                code: `lst = [1, 2, 3, 4, 5]
+print(lst.pop())
+print(lst)`,
+                options: ["5\\n[1, 2, 3, 4]", "1\\n[2, 3, 4, 5]", "5\\n[1, 2, 3, 4, 5]", "Error"],
+                correct: 0,
+                explanation: "pop() without argument removes and returns the last element. After pop(), the list has 5 removed."
+            },
+            {
+                id: 31,
+                question: "What will happen?",
+                code: `x = {1, 2, 3}
+x.add(2)
+print(len(x))`,
+                options: ["4", "3", "2", "Error"],
+                correct: 1,
+                explanation: "Sets contain unique elements. Adding 2 again has no effect since it already exists. Length remains 3."
+            },
+            {
+                id: 32,
+                question: "Identify the error:",
+                code: `import math
+result = math.sqrt(-1)`,
+                options: ["No error", "ValueError: negative number", "TypeError", "ImportError"],
+                correct: 1,
+                explanation: "math.sqrt() raises ValueError for negative numbers. Use cmath.sqrt() for complex results."
+            },
+            {
+                id: 33,
+                question: "What's the output?",
+                code: `x = [1, 2, 3]
+y = x.reverse()
+print(y)`,
+                options: ["[3, 2, 1]", "None", "[1, 2, 3]", "Error"],
+                correct: 1,
+                explanation: "reverse() modifies the list in-place and returns None. To get reversed list, use reversed() or slicing [::-1]."
+            },
+            {
+                id: 34,
+                question: "What will be printed?",
+                code: `result = 5 % 2
+print(result)`,
+                options: ["2.5", "2", "1", "0"],
+                correct: 2,
+                explanation: "The % operator returns the remainder. 5 divided by 2 leaves remainder 1."
+            },
+            {
+                id: 35,
+                question: "What's the result?",
+                code: `s = "  hello  "
+print(len(s.strip()))`,
+                options: ["9", "7", "5", "Error"],
+                correct: 2,
+                explanation: "strip() removes leading and trailing whitespace. '  hello  ' becomes 'hello' with length 5."
+            },
+            {
+                id: 36,
+                question: "Identify the bug:",
+                code: `def calculate(x, y):
+    return x + y
+
+result = calculate(5)`,
+                options: ["No bug", "Missing required argument", "Type error", "Invalid function"],
+                correct: 1,
+                explanation: "Function requires 2 arguments but only 1 is provided. This raises TypeError: missing 1 required positional argument."
+            },
+            {
+                id: 37,
+                question: "What will this print?",
+                code: `data = [1, 2, 2, 3, 3, 3]
+unique = list(set(data))
+print(len(unique))`,
+                options: ["6", "3", "4", "Error"],
+                correct: 1,
+                explanation: "set() removes duplicates. {1, 2, 3} has 3 elements, so len(unique) is 3."
+            },
+            {
+                id: 38,
+                question: "What's the output?",
+                code: `x = [1, 2, 3]
+x.insert(1, 99)
+print(x)`,
+                options: ["[99, 1, 2, 3]", "[1, 99, 2, 3]", "[1, 2, 99, 3]", "Error"],
+                correct: 1,
+                explanation: "insert(index, value) inserts value at the specified index. insert(1, 99) puts 99 at index 1: [1, 99, 2, 3]."
+            },
+            {
+                id: 39,
+                question: "What will be printed?",
+                code: `x = "Hello"
+y = "World"
+print(x + " " + y)`,
+                options: ["Hello World", "HelloWorld", "Hello+World", "Error"],
+                correct: 0,
+                explanation: "String concatenation with + joins strings. 'Hello' + ' ' + 'World' results in 'Hello World'."
+            },
+            {
+                id: 40,
+                question: "What's the result?",
+                code: `nums = [1, 2, 3, 4, 5]
+print(3 in nums)`,
+                options: ["True", "False", "1", "Error"],
+                correct: 0,
+                explanation: "The 'in' operator checks membership. Since 3 is in the list, it returns True."
+            },
+            {
+                id: 41,
+                question: "Identify the error:",
+                code: `x = 10
+if x = 10:
+    print("Ten")`,
+                options: ["No error", "Using = instead of ==", "Missing colon", "Invalid condition"],
+                correct: 1,
+                explanation: "Assignment operator (=) cannot be used in conditions. Should use comparison operator (==)."
+            },
+            {
+                id: 42,
+                question: "What will this print?",
+                code: `x = [1, 2, 3]
+print(x.index(2))`,
+                options: ["1", "2", "0", "Error"],
+                correct: 0,
+                explanation: "index() returns the position of first occurrence. 2 is at index 1 (0-based indexing)."
+            },
+            {
+                id: 43,
+                question: "What's the output?",
+                code: `result = bool([])
+print(result)`,
+                options: ["True", "False", "[]", "Error"],
+                correct: 1,
+                explanation: "Empty lists are falsy in Python. bool([]) returns False."
+            },
+            {
+                id: 44,
+                question: "What will be printed?",
+                code: `x = {'a': 1}
+x.update({'b': 2})
+print(len(x))`,
+                options: ["1", "2", "3", "Error"],
+                correct: 1,
+                explanation: "update() adds key-value pairs to dictionary. After adding 'b', dictionary has 2 keys."
+            },
+            {
+                id: 45,
+                question: "What's the result?",
+                code: `x = "abc"
+y = "ABC"
+print(x.upper() == y)`,
+                options: ["True", "False", "Error", "None"],
+                correct: 0,
+                explanation: "upper() converts 'abc' to 'ABC', which equals y. Returns True."
+            },
+            {
+                id: 46,
+                question: "Identify the bug:",
+                code: `def print_list(items):
+    for item in items
+        print(item)`,
+                options: ["No bug", "Missing colon after items", "Wrong indentation", "Invalid loop"],
+                correct: 1,
+                explanation: "For loop requires colon at the end. Should be 'for item in items:'."
+            },
+            {
+                id: 47,
+                question: "What will this print?",
+                code: `x = range(5)
+print(list(x))`,
+                options: ["[0, 1, 2, 3, 4]", "[1, 2, 3, 4, 5]", "[5]", "Error"],
+                correct: 0,
+                explanation: "range(5) generates numbers 0 to 4 (5 is exclusive). list(x) converts to [0, 1, 2, 3, 4]."
+            },
+            {
+                id: 48,
+                question: "What's the output?",
+                code: `x = "hello world"
+words = x.split()
+print(len(words))`,
+                options: ["1", "2", "11", "Error"],
+                correct: 1,
+                explanation: "split() without arguments splits on whitespace. 'hello world' splits into 2 words."
+            },
+            {
+                id: 49,
+                question: "What will be printed?",
+                code: `x = [1, 2, 3]
+y = x.clear()
+print(y)`,
+                options: ["[]", "None", "[1, 2, 3]", "Error"],
+                correct: 1,
+                explanation: "clear() removes all elements in-place and returns None. To get empty list, check x instead of y."
+            },
+            {
+                id: 50,
+                question: "What's the result?",
+                code: `x = 5
+y = 0
+result = x or y
+print(result)`,
+                options: ["True", "False", "5", "0"],
+                correct: 2,
+                explanation: "Logical 'or' returns the first truthy value. Since 5 is truthy, it returns 5 (not True)."
+            }
+        ];
+
+        function AssessmentPlatform() {
+            const [stage, setStage] = useState('welcome'); // welcome, assessment, results, leaderboard
+            const [name, setName] = useState('');
+            const [email, setEmail] = useState('');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [timeRemaining, setTimeRemaining] = useState(3600); // 60 minutes
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            const [results, setResults] = useState(null);
+            const [leaderboard, setLeaderboard] = useState([]);
+            const timerRef = useRef(null);
+
+            useEffect(() => {
+                // Load leaderboard from localStorage
+                const savedLeaderboard = localStorage.getItem('pythonAssessmentLeaderboard');
+                if (savedLeaderboard) {
+                    setLeaderboard(JSON.parse(savedLeaderboard));
+                }
+            }, []);
+
+            useEffect(() => {
+                if (stage === 'assessment' && timeRemaining > 0) {
+                    timerRef.current = setInterval(() => {
+                        setTimeRemaining(prev => {
+                            if (prev <= 1) {
+                                handleSubmit();
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+
+                    return () => clearInterval(timerRef.current);
+                }
+            }, [stage, timeRemaining]);
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const handleStart = () => {
+                if (name.trim() && email.trim()) {
+                    setStage('assessment');
+                }
+            };
+
+            const handleAnswer = (optionIndex) => {
+                setAnswers({
+                    ...answers,
+                    [currentQuestion]: optionIndex
+                });
+            };
+
+            const handleNext = () => {
+                if (currentQuestion < questions.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                }
+            };
+
+            const handlePrevious = () => {
+                if (currentQuestion > 0) {
+                    setCurrentQuestion(currentQuestion - 1);
+                }
+            };
+
+            const handleQuestionJump = (index) => {
+                setCurrentQuestion(index);
+            };
+
+            const handleSubmit = () => {
+                clearInterval(timerRef.current);
+                
+                let correctCount = 0;
+                const reviewData = questions.map((q, idx) => {
+                    const userAnswer = answers[idx];
+                    const isCorrect = userAnswer === q.correct;
+                    if (isCorrect) correctCount++;
+                    
+                    return {
+                        question: q.question,
+                        code: q.code,
+                        userAnswer: userAnswer !== undefined ? q.options[userAnswer] : 'Not Answered',
+                        correctAnswer: q.options[q.correct],
+                        isCorrect,
+                        explanation: q.explanation
+                    };
+                });
+
+                const score = (correctCount / questions.length) * 100;
+                const timeTaken = 3600 - timeRemaining;
+                
+                const resultData = {
+                    name,
+                    email,
+                    score: score.toFixed(2),
+                    correctCount,
+                    totalQuestions: questions.length,
+                    timeTaken,
+                    review: reviewData,
+                    timestamp: new Date().toISOString()
+                };
+
+                setResults(resultData);
+
+                // Update leaderboard
+                const updatedLeaderboard = [...leaderboard, {
+                    name,
+                    email,
+                    score: score.toFixed(2),
+                    correctCount,
+                    timeTaken,
+                    timestamp: new Date().toISOString()
+                }].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+
+                setLeaderboard(updatedLeaderboard);
+                localStorage.setItem('pythonAssessmentLeaderboard', JSON.stringify(updatedLeaderboard));
+
+                setStage('results');
+            };
+
+            const toggleFullscreen = () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                    setIsFullscreen(true);
+                } else {
+                    document.exitFullscreen();
+                    setIsFullscreen(false);
+                }
+            };
+
+            const viewLeaderboard = () => {
+                setStage('leaderboard');
+            };
+
+            const restartAssessment = () => {
+                setStage('welcome');
+                setName('');
+                setEmail('');
+                setCurrentQuestion(0);
+                setAnswers({});
+                setTimeRemaining(3600);
+                setResults(null);
+            };
+
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            const answeredCount = Object.keys(answers).length;
+
+            if (stage === 'welcome') {
+                return (
+                    <div className="container">
+                        <div className="welcome-screen">
+                            <h1>🐍 Python Debugging Assessment</h1>
+                            <p className="subtitle">
+                                Test your Python debugging skills with 50 carefully crafted MCQ questions
+                            </p>
+
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-value">50</div>
+                                    <div className="stat-label">Questions</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">60</div>
+                                    <div className="stat-label">Minutes</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">MCQ</div>
+                                    <div className="stat-label">Format</div>
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label>Full Name *</label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Enter your full name"
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>Email *</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email address"
+                                />
+                            </div>
+
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleStart}
+                                disabled={!name.trim() || !email.trim()}
+                            >
+                                Start Assessment
+                            </button>
+
+                            {leaderboard.length > 0 && (
+                                <button 
+                                    className="btn btn-secondary" 
+                                    onClick={viewLeaderboard}
+                                >
+                                    View Leaderboard
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            if (stage === 'assessment') {
+                const question = questions[currentQuestion];
+
+                return (
+                    <div className="container">
+                        <div className="assessment-screen">
+                            <div className="header-bar">
+                                <div>
+                                    <strong>{name}</strong> | {email}
+                                </div>
+                                <div className={`timer ${timeRemaining < 300 ? 'warning' : ''}`}>
+                                    ⏱️ {formatTime(timeRemaining)}
+                                </div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                            </div>
+
+                            <div style={{ marginBottom: '1rem', color: '#666' }}>
+                                Answered: {answeredCount} / {questions.length}
+                            </div>
+
+                            <div className="question-card">
+                                <div className="question-number">
+                                    Question {currentQuestion + 1} of {questions.length}
+                                </div>
+                                <div className="question-text">{question.question}</div>
+                                
+                                {question.code && (
+                                    <div className="code-block">{question.code}</div>
+                                )}
+
+                                <div className="options">
+                                    {question.options.map((option, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`option ${answers[currentQuestion] === idx ? 'selected' : ''}`}
+                                            onClick={() => handleAnswer(idx)}
+                                        >
+                                            <div className="option-label">
+                                                {String.fromCharCode(65 + idx)}
+                                            </div>
+                                            <div>{option}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="question-grid">
+                                {questions.map((_, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`question-dot ${answers[idx] !== undefined ? 'answered' : ''} ${idx === currentQuestion ? 'current' : ''}`}
+                                        onClick={() => handleQuestionJump(idx)}
+                                    >
+                                        {idx + 1}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="navigation">
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={handlePrevious}
+                                    disabled={currentQuestion === 0}
+                                >
+                                    ← Previous
+                                </button>
+
+                                {currentQuestion === questions.length - 1 ? (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleSubmit}
+                                    >
+                                        Submit Assessment
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleNext}
+                                    >
+                                        Next →
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <button className="fullscreen-btn" onClick={toggleFullscreen}>
+                            {isFullscreen ? '⛶' : '⛶'}
+                        </button>
+                    </div>
+                );
+            }
+
+            if (stage === 'results') {
+                return (
+                    <div className="container">
+                        <div className="results-screen">
+                            <h1>Assessment Complete! 🎉</h1>
+
+                            <div className="results-summary">
+                                <div className="score">{results.score}%</div>
+                                <div className="score-label">
+                                    {results.correctCount} out of {results.totalQuestions} correct
+                                </div>
+                            </div>
+
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-value">{results.correctCount}</div>
+                                    <div className="stat-label">Correct Answers</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">
+                                        {Math.floor(results.timeTaken / 60)}m {results.timeTaken % 60}s
+                                    </div>
+                                    <div className="stat-label">Time Taken</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">
+                                        {((results.correctCount / results.totalQuestions) * 100).toFixed(1)}%
+                                    </div>
+                                    <div className="stat-label">Accuracy</div>
+                                </div>
+                            </div>
+
+                            <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Answer Review</h2>
+
+                            <div className="answer-review">
+                                {results.review.map((item, idx) => (
+                                    <div key={idx} className={`answer-item ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                                        <div className="answer-header">
+                                            <strong>Question {idx + 1}: {item.question}</strong>
+                                            <span className={`answer-status ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                                                {item.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                            </span>
+                                        </div>
+
+                                        {item.code && (
+                                            <div className="code-block" style={{ fontSize: '0.85rem', margin: '0.5rem 0' }}>
+                                                {item.code}
+                                            </div>
+                                        )}
+
+                                        <div style={{ marginTop: '0.5rem' }}>
+                                            <strong>Your Answer:</strong> {item.userAnswer}
+                                        </div>
+                                        {!item.isCorrect && (
+                                            <div style={{ marginTop: '0.25rem' }}>
+                                                <strong style={{ color: '#51cf66' }}>Correct Answer:</strong> {item.correctAnswer}
+                                            </div>
+                                        )}
+
+                                        <div className="explanation">
+                                            <strong>Explanation:</strong> {item.explanation}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+                                <button className="btn btn-primary" onClick={viewLeaderboard}>
+                                    View Leaderboard
+                                </button>
+                                <button className="btn btn-secondary" onClick={restartAssessment}>
+                                    Take Another Test
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (stage === 'leaderboard') {
+                return (
+                    <div className="container">
+                        <div className="leaderboard-screen">
+                            <h1>🏆 Leaderboard</h1>
+                            <p className="subtitle">Top performers ranked by score and time</p>
+
+                            {leaderboard.length === 0 ? (
+                                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                                    No assessments completed yet. Be the first!
+                                </p>
+                            ) : (
+                                <table className="leaderboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Score</th>
+                                            <th>Correct</th>
+                                            <th>Time</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {leaderboard.map((entry, idx) => (
+                                            <tr key={idx}>
+                                                <td className={`rank rank-${idx + 1}`}>#{idx + 1}</td>
+                                                <td><strong>{entry.name}</strong></td>
+                                                <td>{entry.email}</td>
+                                                <td><strong>{entry.score}%</strong></td>
+                                                <td>{entry.correctCount}/50</td>
+                                                <td>{Math.floor(entry.timeTaken / 60)}m {entry.timeTaken % 60}s</td>
+                                                <td>{new Date(entry.timestamp).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            <div style={{ marginTop: '2rem' }}>
+                                <button className="btn btn-primary" onClick={restartAssessment}>
+                                    Take Assessment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+        }
+
+        ReactDOM.render(<AssessmentPlatform />, document.getElementById('root'));
+    </script>
+</body>
+</html>
